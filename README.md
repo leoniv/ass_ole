@@ -3,14 +3,14 @@
 Provides features for easy access to 1C:Enterprise Ole from Ruby code.
 Main things of this gem is `AssOle::Runtimes` and `AssOle::Snippets`
 
-`AssOle::Runtimes` provides features for control, despatching and easy access to
+`AssOle::Runtimes` provides features for control, despatch and easy access to
 the 1C:Enterprise Ole connectors. `AssOle::Runtimes` inclides mixins which
 provides `ole_connector` method returned specified Ole connector.
 
 `AssOle::Snippets` provides features for transparent access to 1C:Enterprise Ole
 methods and properties from Ruby objects like as they are was own Ruby object
 methods. In other words `AssOle::Snippetes` forvarding call unknown methods
-to the `ole_connector` in `method_missing` handler.
+to the `ole_connector` in the `method_missing` handler.
 
 Both this things makes Ruby code shorter and tidier
 
