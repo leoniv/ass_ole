@@ -23,7 +23,7 @@ module AssOle
     private_class_method :good_context?
 
     def self.ole_class(obj)
-      obj.ole_connector.class
+      obj.ole_connector.class if obj.respond_to? :ole_connector
     end
     private_class_method :ole_class
 
@@ -64,6 +64,7 @@ module AssOle
       end
 
       def extended(obj)
+        return if obj == AssOle::Snippets::IsSnippet
         obj.send(:extend, MethodMissing) unless\
           obj.singleton_class.include? MethodMissing
         obj.send(:extend, Argv) unless\
