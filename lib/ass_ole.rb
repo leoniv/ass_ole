@@ -94,6 +94,7 @@ module AssOle
 # FIXME         @context ||= []
 # FIXME       end
 # FIXME       private :context_get
+      extend self
     end
 
     module Examples
@@ -297,25 +298,32 @@ module AssOle
 
     module RuntimeDispatcher
       def ole_connector
+        ole_runtime_get.ole_connector
+      end
+
+      def ole_runtime_get
         if self.class == Module
-          instance_variable_get(:@ole_connector)
+          instance_variable_get(:@ole_runtime)
         elsif  self.class == Class
-          class_variable_get(:@@ole_connector)
+          class_variable_get(:@@ole_runtime)
         else
-          self.class.ole_connector
+          self.class
         end
       end
+      private :ole_runtime_get
     end
 
     module ModuleMethods
-      def ole_connector
-        @ole_connector
-      end
-
-# FIXME       def run(connection_string_or_uri)
-# FIXME         ole_connector.__open__ connection_string_or_uri unless runned?
+      attr_reader :ole_connector
+# FIXME       def ole_connector
+# FIXME         @ole_connector
 # FIXME       end
-# FIXME
+
+       def run_(connection_string_or_uri)
+         ole_connector.__open__ connection_string_or_uri unless runned?
+       end
+       private :run_
+
       def stop
         ole_connector.__close__ if runned?
       end
@@ -329,22 +337,22 @@ module AssOle
       end
 
       def included(obj)
-        ole_connector_set obj
+        ole_runtime_set obj
         obj.send(:extend, RuntimeDispatcher)
       end
 
       def extended(obj)
-        ole_connector_set obj
+        ole_runtime_set obj
       end
 
-      def ole_connector_set(obj)
+      def ole_runtime_set(obj)
         if obj.class == Class
-          obj.class_variable_set(:@@ole_connector, ole_connector)
+          obj.class_variable_set(:@@ole_runtime, self)
         else
-          obj.instance_variable_set(:@ole_connector, ole_connector)
+          obj.instance_variable_set(:@ole_runtime, self)
         end
       end
-      private :ole_connector_set
+      private :ole_runtime_set
     end
 
     # @api private
@@ -366,15 +374,17 @@ module AssOle
     module App
       module Abstract
         def run(info_base)
-          # FIXME
+          return ole_connector if runned?
+          instance_variable_set(:@ole_connector, info_base.ole(ole_type))
+          run_ info_base.connection_string
         end
       end
       # 1C:Enterprise application external connection runtime helper
       module External
         extend AbstractRuntime
         include Abstract
-        def self.ole_class
-          AssLauncher::Enterprise::Ole::IbConnection
+        def ole_type
+          :external
         end
       end
 
@@ -382,8 +392,8 @@ module AssOle
       module Thick
         extend AbstractRuntime
         include Abstract
-        def self.ole_class
-          AssLauncher::Enterprise::Ole::ThickApplication
+        def ole_type
+          :thick
         end
       end
 
@@ -391,8 +401,8 @@ module AssOle
       module Thin
         extend AbstractRuntime
         include Abstract
-        def self.ole_class
-          AssLauncher::Enterprise::Ole::ThinApplication
+        def ole_type
+          :thin
         end
       end
     end
@@ -401,14 +411,16 @@ module AssOle
     module Claster
       module Abstract
         def run(uri, platform_require = '> 0')
-          # FIXME
+          return ole_connector if runned?
+          instance_variable_set(:@ole_connector,ole_class.new(platform_require))
+          run_ uri
         end
       end
       # 1C:Enterprise serever worcking process connection helper
       module Wp
         extend AbstractRuntime
         include Abstract
-        def self.ole_class
+        def ole_class
           AssLauncher::Enterprise::Ole::WpConnection
         end
       end
@@ -417,7 +429,7 @@ module AssOle
       module Agent
         extend AbstractRuntime
         include Abstract
-        def self.ole_class
+        def ole_class
           AssLauncher::Enterprise::Ole::AgentConnection
         end
       end
