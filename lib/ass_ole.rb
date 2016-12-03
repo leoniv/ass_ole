@@ -1,22 +1,45 @@
 # encoding: utf-8
 
 module AssOle
-  require 'ass_maintainer/info_base'
+  require 'ass_launcher'
   require 'ass_ole/version'
 
   # Helpers for transparency and friendly
   # execute 1C:Enterprise Ole connectors methods as
   # methods a Ryby objects and makes easy for use ruby wrappers over the
   # long and awkward 1C:Enterprise embedded programming language syntax.
+  # @api private
   module Snippets
-    RUNTIME_CONTEXTS = {
-      :IbConnection => :external,
-      :WpConnection => :wp,
-      :AgentConnection => :agent,
-      :ThickApplication => :thick,
-      :ThinApplication => :thin,
-    }
-    class ContextError < StandardError; end
+    GOOD_CONTEXT = AssLauncher::Enterprise::Ole::OLE_CLIENT_TYPES.values
+
+# FIXME       {
+# FIXME       :IbConnection => :external,
+# FIXME       :WpConnection => :wp,
+# FIXME       :AgentConnection => :agent,
+# FIXME       :ThickApplication => :thick,
+# FIXME       :ThinApplication => :thin,
+# FIXME     }
+
+    class ContextError < StandardError
+      def initialize(ole_class)
+        super "Invalid `ole_connector': #{ole_class}"
+      end
+    end
+
+    def self.fail_if_bad_context(obj)
+      fail ContextError.new(ole_class(obj)) unless good_context? obj
+    end
+
+    def self.good_context?(obj)
+      GOOD_CONTEXT.include? ole_class(obj)
+    end
+    private_class_method :good_context?
+
+    def self.ole_class(obj)
+      obj.ole_connector.class
+    end
+    private_class_method :ole_class
+
     module IsSnippet
       # Helper for pass into 1C ole runtime understandable file system pathes.
       # This provides method `win_path` which will be available in snippets
@@ -29,7 +52,8 @@ module AssOle
       # It worcking via method_missing handler
       module MethodMissing
         def method_missing(method, *args)
-          ole_connector.send(method, *args)
+          AssOle::Snippets.fail_if_bad_context(self)
+          return ole_connector.send(method, *args) if ole_connector
         end
       end
 
@@ -43,7 +67,6 @@ module AssOle
 
       def included(obj)
         return if is_helper?(obj)
-        fail_if_bad_context obj
         obj.send(:include, MethodMissing) unless obj.include? MethodMissing
         obj.send(:include, Argv) unless obj.include? Argv
         obj.send(:include, WinPath) unless obj.include? WinPath
@@ -53,16 +76,7 @@ module AssOle
         obj.class == Module
       end
 
-      def fail_if_bad_context(obj)
-        fail ContextError unless context_get.include? runtime_context(obj)
-      end
-
-      def runtime_context(obj)
-        RUNTIME_CONTEXTS[obj.ole_connector.class.name.split('::').last.to_sym]
-      end
-
       def extended(obj)
-        fail_if_bad_context obj
         obj.send(:extend, MethodMissing) unless\
           obj.singleton_class.include? MethodMissing
         obj.send(:extend, Argv) unless\
@@ -70,23 +84,23 @@ module AssOle
         obj.send(:extend, WinPath) unless\
           obj.singleton_class.include? WinPath
       end
-
-      def context(*context)
-        fail ContextError if (context - RUNTIME_CONTEXTS.values).size > 0
-        @context = context_get + context
-      end
-
-      def context_get
-        @context ||= []
-      end
-      private :context_get
+# FIXME
+# FIXME       def context(*context)
+# FIXME         fail ContextError if (context - RUNTIME_CONTEXTS.values).size > 0
+# FIXME         @context = context_get + context
+# FIXME       end
+# FIXME
+# FIXME       def context_get
+# FIXME         @context ||= []
+# FIXME       end
+# FIXME       private :context_get
     end
 
     module Examples
       # Snippet for serialize and deserilize 1C objects to xml
       module XMLSerializer
         extend AssOle::Snippets::IsSnippet
-        context :external, :thick
+        # FIXME context :external, :thick
 
         def to_xml(obj)
           zxml = newObject 'XMLWriter'
@@ -116,7 +130,7 @@ module AssOle
       # Snippet for worcking with 1C Query object
       module Query
         extend AssOle::Snippets::IsSnippet
-        context :external, :thick
+        # FIXME context :external, :thick
 
         def query(text, temp_tables_manager = nil, **params)
           q = newObject('Query', text)
@@ -159,7 +173,7 @@ module AssOle
         STANDARD_ATTRIBUTES = %w(Ref Code Description Owner Parent IsFolder\
                                 DeletionMark Predefined)
         extend AssOle::Snippets::IsSnippet
-        context :external, :thick
+        # FIXME context :external, :thick
         include OleHelpers::LookingForItems
         def folder_create_if_not_exists(desc, parent = nil, owner = nil,
                                         **fields)
@@ -298,16 +312,20 @@ module AssOle
         @ole_connector
       end
 
-      def run(connection_string_or_uri)
-        ole_connector.__open__ connection_string_or_uri unless runned?
-      end
-
+# FIXME       def run(connection_string_or_uri)
+# FIXME         ole_connector.__open__ connection_string_or_uri unless runned?
+# FIXME       end
+# FIXME
       def stop
         ole_connector.__close__ if runned?
       end
 
       def runned?
-        ole_connector.__opened__?
+        initialized? && ole_connector.__opened__?
+      end
+
+      def initialized?
+        !ole_connector.nil?
       end
 
       def included(obj)
@@ -331,13 +349,13 @@ module AssOle
 
     # @api private
     module AbstractRuntime
-      def platform_require(obj)
-        eval "#{obj.name}::PLATFORM_REQUIRE"
-      end
+# FIXME       def platform_require(obj)
+# FIXME         eval "#{obj.name}::PLATFORM_REQUIRE"
+# FIXME       end
 
       def extended(obj)
-        obj.instance_variable_set(:@ole_connector,
-                                  ole_class.new(obj.PLATFORM_REQUIRE))
+        # FIXME obj.instance_variable_set(:@ole_connector,
+        # FIXME                          ole_class.new(obj.PLATFORM_REQUIRE))
         obj.send(:extend, AssOle::Runtimes::ModuleMethods)
         obj.send(:include, AssOle::Runtimes::RuntimeDispatcher)
         Runtimes.runtimes << obj
@@ -346,9 +364,15 @@ module AssOle
 
     # 1C:Enterprise application runtime helpers
     module App
+      module Abstract
+        def run(info_base)
+          # FIXME
+        end
+      end
       # 1C:Enterprise application external connection runtime helper
       module External
         extend AbstractRuntime
+        include Abstract
         def self.ole_class
           AssLauncher::Enterprise::Ole::IbConnection
         end
@@ -357,6 +381,7 @@ module AssOle
       # 1C:Enterprise thick application connection runtime helper
       module Thick
         extend AbstractRuntime
+        include Abstract
         def self.ole_class
           AssLauncher::Enterprise::Ole::ThickApplication
         end
@@ -365,6 +390,7 @@ module AssOle
       # 1C:Enterprise thin application connection runtime helper
       module Thin
         extend AbstractRuntime
+        include Abstract
         def self.ole_class
           AssLauncher::Enterprise::Ole::ThinApplication
         end
@@ -373,9 +399,15 @@ module AssOle
 
     # 1C:Enterprise server runtime helpers
     module Claster
+      module Abstract
+        def run(uri, platform_require = '> 0')
+          # FIXME
+        end
+      end
       # 1C:Enterprise serever worcking process connection helper
       module Wp
         extend AbstractRuntime
+        include Abstract
         def self.ole_class
           AssLauncher::Enterprise::Ole::WpConnection
         end
@@ -384,6 +416,7 @@ module AssOle
       # 1C:Enterprise serever agent connection helper
       module Agent
         extend AbstractRuntime
+        include Abstract
         def self.ole_class
           AssLauncher::Enterprise::Ole::AgentConnection
         end
