@@ -6,25 +6,10 @@ module AssOle
   require 'ass_ole/snippets'
   require 'ass_ole/dsl'
 
-  # Helpers for friendly uses 1C:Enterprise Ole connectors
-  # @example
-  #  module InfoBase1ExternalRuntime
-  #    def self.PLATFORM_REQUIRE
-  #      '~> 8.3.8'
-  #    end
-  #    extend AssOle::Runtimes::App::External
-  #  end
-  #
-  #  class MyClassWitRuntime
-  #    def ass_application_name
-  #      ole_connector.methadata.name
-  #    end
-  #  end
-  #  connection_string = 'File="./tmp/info_base1.ib"'
-  #  InfoBase1ExternalRuntime.run(connection_string)
-  #  puts MyClassWitRuntime.new.ass_application_name
+  # @api private
+  # Runtimes hold all created Ole runtimes and stopped they in +at_axit+ see
+  # {.do_at_exit}
   module Runtimes
-    # @api private
     def self.runtimes
       @runtimes ||= []
     end
@@ -41,6 +26,7 @@ module AssOle
       do_at_exit
     end
 
+    # @api private
     module RuntimeDispatcher
       def ole_connector
         ole_runtime_get.ole_connector
@@ -58,6 +44,7 @@ module AssOle
       private :ole_runtime_get
     end
 
+    # @api private
     module ModuleMethods
       attr_reader :ole_connector
 
@@ -107,7 +94,9 @@ module AssOle
     end
 
     # 1C:Enterprise application runtime helpers
+    # @api private
     module App
+      # @api private
       module Abstract
         def run(info_base)
           return ole_connector if runned?
@@ -144,6 +133,7 @@ module AssOle
     end
 
     # 1C:Enterprise server runtime helpers
+    # @api private
     module Claster
       module Abstract
         def run(uri, platform_require = '> 0')
