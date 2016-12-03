@@ -1,7 +1,9 @@
 # encoding: utf-8
 
 module AssOle
-  require 'ass_launcher'
+  require 'ass_maintainer/info_base'
+  require 'ass_ole/version'
+
   # Helpers for transparency and friendly
   # execute 1C:Enterprise Ole connectors methods as
   # methods a Ryby objects and makes easy for use ruby wrappers over the
