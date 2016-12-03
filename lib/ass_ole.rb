@@ -4,6 +4,7 @@ module AssOle
   require 'ass_launcher'
   require 'ass_ole/version'
   require 'ass_ole/snippets'
+  require 'ass_ole/dsl'
 
   # Helpers for friendly uses 1C:Enterprise Ole connectors
   # @example

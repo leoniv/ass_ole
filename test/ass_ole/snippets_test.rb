@@ -40,7 +40,7 @@ module AssOleTest
 
   describe AssOle::Snippets::IsSnippet do
     describe 'Ole snippet is Module and mixin for other' do
-      Snippet = Module.new do
+      snippet = Module.new do
         is_ole_snippet
 
         def hello_ole(str)
@@ -48,25 +48,25 @@ module AssOleTest
         end
       end
 
-      Runtime = Module.new do
+      runtime = Module.new do
         is_ole_runtime :external
       end
 
-      ItHasRuntime = Module.new do
-        it_has_ole_runtime Runtime
-        extend Snippet
+      itHasRuntime = Module.new do
+        it_has_ole_runtime runtime
+        extend snippet
       end
 
-      Runtime.run Tmp::INFO_BASE
+      runtime.run Tmp::INFO_BASE
 
       it 'fail without ole runtime' do
         proc {
-          Snippet.sTring('HELLO')
+          snippet.sTring('HELLO')
         }.must_raise NoMethodError
       end
 
       it 'sucsess if Snippet mix in to ItHasRuntime' do
-        ItHasRuntime.hello_ole('HELLO').must_equal('HELLO')
+        itHasRuntime.hello_ole('HELLO').must_equal('HELLO')
       end
     end
 
@@ -82,15 +82,15 @@ module AssOleTest
     end
 
     describe 'Error occurred if ole runtime wasn\'t running' do
-      Runtime = Module.new do
+      runtime = Module.new do
         is_ole_runtime :external
       end
 
       module_ = Module.new do
-        like_ole_runtime Runtime
+        like_ole_runtime runtime
       end
 
-      # Fail without: Runtime.run Tmp::INFO_BASE
+      # Fail without: runtime.run Tmp::INFO_BASE
 
       it 'fail without running ole runtime' do
         proc {
