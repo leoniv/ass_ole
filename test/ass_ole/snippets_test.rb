@@ -1,83 +1,101 @@
 require 'test_helper'
 module AssOleTest
+  describe AssOle::Snippets::LikeOleRuntime do
+    describe 'Module like_ole_runtime' do
+      runtime = Module.new do
+        is_ole_runtime :external
+      end
+
+      module_ = Module.new do
+        like_ole_runtime runtime
+        ole_runtime_get.run Tmp::INFO_BASE
+      end
+
+      it 'Module quacks like Ole runtime' do
+        module_.sTring('HELLO').must_equal 'HELLO'
+      end
+    end
+
+    describe 'Class like_ole_runtime' do
+      runtime = Module.new do
+        is_ole_runtime :external
+      end
+
+      klass = Class.new do
+        like_ole_runtime runtime
+        ole_runtime_get.run Tmp::INFO_BASE
+      end
+
+      it 'Class instance quacks like Ole runtime' do
+        klass.new.sTring('HELLO').must_equal 'HELLO'
+      end
+
+      it 'Class doesn\'t quacks like Ole runtime' do
+        proc {
+          klass.sTring 'HELLO'
+        }.must_raise NoMethodError
+      end
+    end
+  end
+
   describe AssOle::Snippets::IsSnippet do
-    describe 'Class includes snippets' do
-      snippet1 = Module.new do
-        extend AssOle::Snippets::IsSnippet
+    describe 'Ole snippet is Module and mixin for other' do
+      Snippet = Module.new do
+        is_ole_snippet
 
-        def string_get1(obj)
-          sTring(obj)
+        def hello_ole(str)
+          sTring(str)
         end
       end
 
-      snippet2 = Module.new do
-        extend AssOle::Snippets::IsSnippet
-
-        def string_get2(obj)
-          sTring(obj)
-        end
+      Runtime = Module.new do
+        is_ole_runtime :external
       end
 
-      runtime = Module.new do
-        extend AssOle::Runtimes::App::External
+      ItHasRuntime = Module.new do
+        it_has_ole_runtime Runtime
+        extend Snippet
       end
 
-      snippited_class = Class.new do
-        include runtime
-        include snippet1
-        include snippet2
+      Runtime.run Tmp::INFO_BASE
+
+      it 'fail without ole runtime' do
+        proc {
+          Snippet.sTring('HELLO')
+        }.must_raise NoMethodError
       end
 
-      runtime.run Tmp::INFO_BASE
-
-      attr_reader :inst
-      before do
-        @inst = snippited_class.new
-      end
-
-      it '#{snippited_class} transparent call 1C Ole' do
-        inst.string_get1('HELLO').must_equal 'HELLO'
-        inst.string_get2('HELLO').must_equal 'HELLO'
-        inst.sTring('HELLO').must_equal 'HELLO'
+      it 'sucsess if Snippet mix in to ItHasRuntime' do
+        ItHasRuntime.hello_ole('HELLO').must_equal('HELLO')
       end
     end
 
-    describe 'Class self is snippet' do
-      runtime = Module.new do
-        extend AssOle::Runtimes::App::External
-      end
-
-      runtime.run Tmp::INFO_BASE
-
-      snippet_class = Class.new do
-        include runtime
-        include AssOle::Snippets::IsSnippet
-      end
-
-      attr_reader :inst
-      before do
-        @inst = snippet_class.new
-      end
-
-      it '#{snippet_class} transparent call 1C Ole' do
-        inst.sTring('HELLO').must_equal 'HELLO'
+    describe 'Class isn\'t ole snippet' do
+      it 'fail' do
+        e = proc {
+          Class.new do
+            is_ole_snippet
+          end
+        }.must_raise RuntimeError
+        e.message.must_match %r{not a Class}
       end
     end
 
-    describe 'Module self is snippet' do
-      runtime = Module.new do
-        extend AssOle::Runtimes::App::External
+    describe 'Error occurred if ole runtime wasn\'t running' do
+      Runtime = Module.new do
+        is_ole_runtime :external
       end
 
-      runtime.run Tmp::INFO_BASE
-
-      snippet_module = Module.new do
-        extend runtime
-        extend AssOle::Snippets::IsSnippet
+      module_ = Module.new do
+        like_ole_runtime Runtime
       end
 
-      it '#{snippet_module} transparent call 1C Ole' do
-        snippet_module.sTring('HELLO').must_equal 'HELLO'
+      # Fail without: Runtime.run Tmp::INFO_BASE
+
+      it 'fail without running ole runtime' do
+        proc {
+          module_.sTring('HELLO')
+        }.must_raise AssOle::Snippets::ContextError
       end
     end
   end

@@ -1,4 +1,50 @@
 module AssOle
+  module DSL
+    def is_ole_snippet
+      fail 'Ole snippet must be a Module not a Class' if\
+        self.class == Class
+      extend AssOle::Snippets::IsSnippet
+    end
+
+    def like_ole_runtime(runtime)
+      it_has_ole_runtime runtime
+      case self
+      when Class then
+        include AssOle::Snippets::LikeOleRuntime
+      else
+        extend AssOle::Snippets::LikeOleRuntime
+      end
+    end
+
+    def it_has_ole_runtime(runtime)
+      case self
+      when Class then
+        include runtime
+      else
+        extend runtime
+      end
+    end
+
+    def is_ole_runtime(type)
+      fail 'Ole runtime is a Module not a Class' if\
+        self.class == Class
+      case type
+      when :external then
+        extend AssOle::Runtimes::App::External
+      when :thick
+        extend AssOle::Runtimes::App::Thick
+      when :thin
+        extend AssOle::Runtimes::App::Thin
+      when :wp
+        extend AssOle::Runtimes::Claster::Wp
+      when :agent
+        extend AssOle::Runtimes::Claster::Agent
+      else
+        fail "Invalid runtime #{type}"
+      end
+    end
+  end
+
   # Helpers for transparency and friendly
   # execute 1C:Enterprise Ole connectors methods as
   # methods a Ryby objects and makes easy for use ruby wrappers over the
@@ -72,8 +118,15 @@ module AssOle
         obj.send(:extend, WinPath) unless\
           obj.singleton_class.include? WinPath
       end
+    end
 
-      extend self
+    module LikeOleRuntime
+      extend IsSnippet
     end
   end
 end
+
+class Module
+  include AssOle::DSL
+end
+
