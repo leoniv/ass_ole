@@ -1,8 +1,22 @@
 # AssOle
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/ass_ole`. To experiment with that code, run `bin/console` for an interactive prompt.
+Provides features for easy access to 1C:Enterprise Ole from Ruby code.
+Main things of this gem is `AssOle::Runtimes` and `AssOle::Snippets`
 
-TODO: Delete this and the text above, and describe your gem
+`AssOle::Runtimes` provides features for control, despatching and easy access to
+the 1C:Enterprise Ole connectors. `AssOle::Runtimes` inclides mixins which
+provides `ole_connector` method returned specified Ole connector.
+
+`AssOle::Snippets` provides features for transparent access to 1C:Enterprise Ole
+methods and properties from Ruby objects like as they are was own Ruby object
+methods. In other words `AssOle::Snippetes` forvarding call unknown methods
+to the `ole_connector` in `method_missing` handler.
+
+Both this things makes Ruby code shorter and tidier
+
+## Examples
+
+TODO
 
 ## Installation
 
@@ -19,10 +33,6 @@ And then execute:
 Or install it yourself as:
 
     $ gem install ass_ole
-
-## Usage
-
-TODO: Write usage instructions here
 
 ## Development
 
