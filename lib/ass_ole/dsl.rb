@@ -1,6 +1,8 @@
 module AssOle
   # It mixins for {Module}
   module DSL
+    # rubocop:disable Style/PredicateName
+
     # Define module as Ole snippet
     # @example
     #  module Query
@@ -45,7 +47,7 @@ module AssOle
     #   end
     #
     #   MyOleAccessor.hello('Ass')
-    def  like_ole_runtime(runtime)
+    def like_ole_runtime(runtime)
       it_has_ole_runtime runtime
       case self
       when Class then
@@ -78,6 +80,8 @@ module AssOle
       end
     end
 
+    # rubocop:disable Metrics/CyclomaticComplexity
+
     # Define Ole runtime
     # @example
     #  acct_infobase = AssMaintainer::InfoBase.new('name', 'File="path"')
@@ -98,23 +102,19 @@ module AssOle
     #
     #  puts MyScript.version
     def is_ole_runtime(type)
-      fail 'Ole runtime is a Module not a Class' if\
-        self.class == Class
+      fail 'Ole runtime is a Module not a Class' if self.class == Class
       case type
-      when :external then
-        extend AssOle::Runtimes::App::External
-      when :thick
-        extend AssOle::Runtimes::App::Thick
-      when :thin
-        extend AssOle::Runtimes::App::Thin
-      when :wp
-        extend AssOle::Runtimes::Claster::Wp
-      when :agent
-        extend AssOle::Runtimes::Claster::Agent
-      else
-        fail "Invalid runtime #{type}"
+      when :external then extend AssOle::Runtimes::App::External
+      when :thick then extend AssOle::Runtimes::App::Thick
+      when :thin then extend AssOle::Runtimes::App::Thin
+      when :wp then extend AssOle::Runtimes::Claster::Wp
+      when :agent then extend AssOle::Runtimes::Claster::Agent
+      else fail "Invalid runtime #{type}"
       end
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
+
+    # rubocop:enable Style/PredicateName
   end
 end
 

@@ -7,6 +7,7 @@ module AssOle
   module Snippets
     GOOD_CONTEXT = AssLauncher::Enterprise::Ole::OLE_CLIENT_TYPES.values
 
+    # :nodoc:
     class ContextError < StandardError
       def initialize(ole_class)
         super "Invalid `ole_connector': #{ole_class}"
@@ -14,7 +15,7 @@ module AssOle
     end
 
     def self.fail_if_bad_context(obj)
-      fail ContextError.new(ole_class(obj)) unless good_context? obj
+      fail ContextError, ole_class(obj) unless good_context? obj
     end
 
     def self.good_context?(obj)
@@ -56,13 +57,13 @@ module AssOle
       end
 
       def included(obj)
-        return if is_helper?(obj)
+        return if helper?(obj)
         obj.send(:include, MethodMissing) unless obj.include? MethodMissing
         obj.send(:include, Argv) unless obj.include? Argv
         obj.send(:include, WinPath) unless obj.include? WinPath
       end
 
-      def is_helper?(obj)
+      def helper?(obj)
         obj.class == Module
       end
 

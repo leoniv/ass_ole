@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+# AssOle provides helpers for manipulate with
+# 1C:Enterprise Ole serevers and some more
 module AssOle
   require 'ass_launcher'
   require 'ass_ole/version'
@@ -17,9 +19,7 @@ module AssOle
     # @api private
     # `at_exit` handler closed all opened connections
     def self.do_at_exit
-      runtimes.each do |r|
-        r.stop
-      end
+      runtimes.each(&:stop)
     end
 
     at_exit do
@@ -35,7 +35,7 @@ module AssOle
       def ole_runtime_get
         if self.class == Module
           instance_variable_get(:@ole_runtime)
-        elsif  self.class == Class
+        elsif self.class == Class
           class_variable_get(:@@ole_runtime)
         else
           self.class
@@ -48,10 +48,10 @@ module AssOle
     module ModuleMethods
       attr_reader :ole_connector
 
-       def run_(connection_string_or_uri)
-         ole_connector.__open__ connection_string_or_uri unless runned?
-       end
-       private :run_
+      def run_(connection_string_or_uri)
+        ole_connector.__open__ connection_string_or_uri unless runned?
+      end
+      private :run_
 
       def stop
         ole_connector.__close__ if runned?
@@ -97,6 +97,7 @@ module AssOle
     # @api private
     module App
       # @api private
+      # @abstract
       module Abstract
         def run(info_base)
           return ole_connector if runned?
@@ -135,13 +136,17 @@ module AssOle
     # 1C:Enterprise server runtime helpers
     # @api private
     module Claster
+      # @abstract
+      # @api private
       module Abstract
         def run(uri, platform_require = '> 0')
           return ole_connector if runned?
-          instance_variable_set(:@ole_connector,ole_class.new(platform_require))
+          instance_variable_set(:@ole_connector,
+                                ole_class.new(platform_require))
           run_ uri
         end
       end
+
       # 1C:Enterprise serever worcking process connection helper
       module Wp
         extend AbstractRuntime
