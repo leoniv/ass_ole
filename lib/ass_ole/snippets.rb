@@ -30,10 +30,12 @@ module AssOle
     # @api private
     module IsSnippet
       # Helper for pass into 1C ole runtime understandable file system pathes.
-      # This provides method `win_path` which will be available in snippets
+      # This provides method {#real_win_path}
+      # which will be available in snippets
       module WinPath
-        def win_path(path)
-          AssLauncher::Support::Platforms.path(path).win_string
+        def real_win_path(path)
+          AssLauncher::Support::Platforms
+            .path(path).realdirpath.win_string
         end
       end
 

@@ -22,4 +22,9 @@ module AssOleTest
       INFO_BASE.rm! :yes
     end
   end
+
+  TEST_OLE_RUNTIME = Module.new do
+    is_ole_runtime :external
+    run Tmp::INFO_BASE
+  end
 end
