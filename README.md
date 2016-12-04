@@ -16,7 +16,7 @@ Both this things makes Ruby code shorter and tidier
 
 ## Attention
 
-`AssOle::Runtimes` closes all ole connections in `at_ext` hook. You should
+`AssOle::Runtimes` closes all ole connections in `at_exit` hook. You should
 checks order of modules loading.
 For example if `ass_ole` uses with `minitest` first load
 `ass_ole` secont load `minitest` otherwise all ole connections will be closed
@@ -25,7 +25,7 @@ before start tests executing:
 ```ruby
 requre 'ass_ole'
 requre 'minitest/autorun'
-``
+```
 
 ## Examples
 
