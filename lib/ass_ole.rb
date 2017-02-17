@@ -41,7 +41,6 @@ module AssOle
           self.class.send :ole_runtime_get
         end
       end
-      private :ole_runtime_get
     end
 
     # @api private
