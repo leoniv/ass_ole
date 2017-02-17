@@ -38,7 +38,7 @@ module AssOle
         elsif self.class == Class
           class_variable_get(:@@ole_runtime)
         else
-          self.class
+          self.class.send :ole_runtime_get
         end
       end
       private :ole_runtime_get
