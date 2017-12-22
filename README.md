@@ -1,3 +1,4 @@
+[![Gem Version](https://badge.fury.io/rb/ass_ole.svg)](https://badge.fury.io/rb/ass_ole)
 # AssOle
 
 Provides features for easy access to 1C:Enterprise Ole from Ruby code.
