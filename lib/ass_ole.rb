@@ -7,6 +7,8 @@ module AssOle
   require 'ass_ole/version'
   require 'ass_ole/snippets'
   require 'ass_ole/dsl'
+  require 'ass_ole/core_patch/no_method_error'
+  require 'ass_ole/core_patch/win32ole_runtime_error'
 
   # @api private
   # Runtimes hold all created Ole runtimes and stopped they in +at_axit+ see
